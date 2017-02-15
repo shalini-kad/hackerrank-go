@@ -77,12 +77,8 @@ func runTest(r *bufio.Reader) {
 	}
 
 	// perform breadth first search on tree to find goal node
-	toSearch := make([]*treeNode, 0)
+	toSearch := root.children
 	found := make([]*treeNode, 0)
-
-	for _, node := range root.children {
-		toSearch = append(toSearch, node)
-	}
 
 	depth := 0
 SearchLoop:
