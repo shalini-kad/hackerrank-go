@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"container/list"
 	"fmt"
+	"os"
 )
 
 /* naive solution: does not do well with large numbers
@@ -38,98 +40,105 @@ func main() {
 
 type trackRange struct {
 	start int
-	end int
+	end   int
 }
 
 func main() {
-	var rows, cols, numTracks int
-	fmt.Scanf("%d %d %d", &rows, &cols, &numTracks)
+	// use bufio for buffered io, faster than fmt.Scan
+	in := bufio.NewReader(os.Stdin)
 
-	gridland := make([]*list.List, rows)
-    for i := 0; i < rows; i++ {
-        gridland[i] = list.New()
-    }
+	var rows, cols, numTracks int
+	fmt.Fscan(in, &rows, &cols, &numTracks)
+
+	gridland := make(map[int]*list.List)
 
 	for i := 0; i < numTracks; i++ {
 		var (
-            row int
-            newTrack trackRange
-        )
-        
-		fmt.Scanf("%d %d %d", &row, &newTrack.start, &newTrack.end)
+			row      int
+			newTrack trackRange
+		)
+
+		fmt.Fscan(in, &row, &newTrack.start, &newTrack.end)
 		row -= 1
 		newTrack.start -= 1
 		newTrack.end -= 1
-        
+
+		if gridland[row] == nil {
+			gridland[row] = list.New()
+		}
+
 		mergeTrack(gridland[row], newTrack)
 	}
 
-    numSpaces := 0
-    for i := 0; i < rows; i++ {
-        rowSpaces := cols
-        trackList := gridland[i]
-        for e := trackList.Front(); e != nil; e = e.Next() {
-            track := e.Value.(trackRange)
-            trackLength := track.end - track.start + 1
-            rowSpaces -= trackLength
-        }
-        numSpaces += rowSpaces
-    }
-    
-    fmt.Println(numSpaces)
+	// count empty spaces
+	numSpaces := 0
+	for _, trackList := range gridland {
+		rowSpaces := cols
+		for e := trackList.Front(); e != nil; e = e.Next() {
+			track := e.Value.(trackRange)
+			trackLength := track.end - track.start + 1
+			rowSpaces -= trackLength
+		}
+		numSpaces += rowSpaces
+	}
+
+	// add spaces for blank lines
+	numSpaces += (cols * (rows - len(gridland)))
+
+	fmt.Println(numSpaces)
 }
 
 func mergeTrack(tracks *list.List, newTrack trackRange) {
-    var e, next *list.Element
-    
-    for e = tracks.Front(); e != nil; e = next {
-        track := e.Value.(trackRange)
-        
-        if newTrack.start < track.start {
-            
-            if newTrack.end < track.start {
-                // starts and ends before - insert before
-                tracks.InsertBefore(newTrack, e)
-                break
-            } else if newTrack.end <= track.end {
-                // starts before, but ends inside - merge
-                track.start = newTrack.start
-                break
-            } else {
-                // starts before and ends after - supercede existing
-                next = e.Next()
-                tracks.Remove(e)
-            }
-            
-        } else if newTrack.start == track.start {
-            
-            if newTrack.end <= track.end {
-                // encompassed by existing - noop
-                break
-            } else {
-                // ends after - supercede existing
-                next = e.Next()
-                tracks.Remove(e)
-            }
-            
-        } else {
-            
-            if newTrack.end <= track.end {
-                // encompassed by existing - noop
-                break
-            } else if newTrack.start <= track.end {
-                // starts inside and ends after - merge and continue
-                newTrack.start = track.start
-                next = e.Next()
-                tracks.Remove(e)
-            } else {
-                // after current track - continue
-                next = e.Next()
-            }    
+	var e, next *list.Element
+
+	for e = tracks.Front(); e != nil; e = next {
+		track := e.Value.(trackRange)
+
+		if newTrack.start < track.start {
+
+			if newTrack.end < track.start {
+				// starts and ends before - insert before
+				tracks.InsertBefore(newTrack, e)
+				break
+			} else if newTrack.end <= track.end {
+				// starts before, but ends inside - merge
+				track.start = newTrack.start
+				break
+			} else {
+				// starts before and ends after - supercede existing
+				next = e.Next()
+				tracks.Remove(e)
+			}
+
+		} else if newTrack.start == track.start {
+
+			if newTrack.end <= track.end {
+				// encompassed by existing - noop
+				break
+			} else {
+				// ends after - supercede existing
+				next = e.Next()
+				tracks.Remove(e)
+			}
+
+		} else {
+
+			if newTrack.end <= track.end {
+				// encompassed by existing - noop
+				break
+			} else if newTrack.start <= track.end {
+				// starts inside and ends after - merge and continue
+				newTrack.start = track.start
+				next = e.Next()
+				tracks.Remove(e)
+			} else {
+				// after current track - continue
+				next = e.Next()
+			}
+		}
 	}
-    }
-    
-    if e == nil {
-        tracks.PushBack(newTrack)
-    }
+
+	if e == nil {
+		tracks.PushBack(newTrack)
+	}
 }
