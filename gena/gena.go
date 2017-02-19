@@ -37,7 +37,8 @@ func main() {
 
 	toSearch := getNextStates(rootState)
 	found := make([]gameState, 0)
-
+	seen := make([]gameState, 0)
+	
 	depth := 0
 SearchLoop:
 	for len(toSearch) != 0 {
@@ -57,6 +58,12 @@ SearchLoop:
 						break
 					}
 				}
+				for _, existingState := range seen {
+					if gameStatesEqual(nextState, existingState) {
+						isRepeatState = true
+						break
+					}
+				}
 				if !isRepeatState {
 					found = append(found, nextState)
 				}
@@ -64,6 +71,7 @@ SearchLoop:
 		}
 
 		toSearch = found
+		seen = append(seen, found...)
 		found = make([]gameState, 0)
 	}
 
