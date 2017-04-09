@@ -10,7 +10,7 @@ func main() {
 	fmt.Scan(&targetNum, &power)
 
 	currentAddendBase := computeMaxAddendBase(targetNum, power)
-	numFound := numPowerSums(targetNum, power, currentAddendBase+1)
+	numFound := numPowerSums(targetNum, power, currentAddendBase)
 	fmt.Println(numFound)
 }
 
@@ -38,6 +38,11 @@ func computeMaxAddendBase(num, b int) int {
 	// b Log(x) = Log(num)
 	// Log(x) = Log(num) / b
 	// x = e ^ (Log(num) / b)
-	exactLog := math.Pow(math.E, math.Log(float64(num))/float64(b))
-	return int(math.Floor(exactLog))
+	log := math.Pow(math.E, math.Log(float64(num))/float64(b))
+	log = math.Floor(log)
+	// sometimes floating point math is a little off
+	if math.Pow(float64(log+1), float64(b)) <= float64(num) {
+		log = log + 1
+	}
+	return log
 }
